@@ -1,46 +1,55 @@
 import os
-import sys
-import subprocess
-import time
-
-# تثبيت تلقائي للمكتبات إذا لم تكن موجودة
-required = ["requests", "playsound"]
-
-for package in required:
-    try:
-        __import__(package)
-    except ImportError:
-        print(f"📦 تثبيت المكتبة: {package}", flush=True)
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-        print(f"✅ تم التثبيت: {package}", flush=True)
-
 import requests
-from playsound import playsound
+import shutil
+import subprocess
 
+# ===== إعداد =====
 url = "https://mp4.shabakngy.com/m/m/CrjPD3Fg3Wk.mp3"
-filename = "start.mp3"
+filename = "/sdcard/start.mp3"  # موقع الحفظ على الهاتف
 
-try:
+# ===== تحقق من وجود Termux وأدواته =====
+def install_termux_tools():
+    print("📦 التحقق من وجود Termux ...", flush=True)
+    if shutil.which("termux-media-player") is None:
+        print("⚙️ جاري تثبيت termux-api و termux-media-player ...", flush=True)
+        try:
+            subprocess.run(["pkg", "update", "-y"])
+            subprocess.run(["pkg", "install", "-y", "termux-api"])
+            subprocess.run(["pkg", "install", "-y", "termux-media-player"])
+            print("✅ تم تثبيت الأدوات بنجاح.", flush=True)
+        except Exception as e:
+            print(f"❌ فشل التثبيت التلقائي: {e}", flush=True)
+    else:
+        print("✅ termux-media-player مثبت مسبقًا.", flush=True)
+
+# ===== تحميل الصوت =====
+def download_audio():
     print("📥 جاري تحميل الملف الصوتي ...", flush=True)
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
 
-    with open(filename, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+        with open(filename, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
 
-    print("✅ تم التحميل: start.mp3", flush=True)
+        print(f"✅ تم الحفظ: {filename}", flush=True)
+        return True
 
+    except Exception as e:
+        print(f"❌ فشل التحميل: {e}", flush=True)
+        return False
+
+# ===== تشغيل الصوت =====
+def play_audio():
     print("🔊 يتم تشغيل الصوت ...", flush=True)
-    playsound(filename)
-
+    os.system(f"termux-media-player play {filename}")
     print("✅ تم التشغيل.", flush=True)
-    input("📌 اضغط Enter للخروج ...")
 
-except requests.exceptions.RequestException as e:
-    print(f"❌ فشل تحميل الملف: {e}", flush=True)
-    input("📌 اضغط Enter للخروج ...")
-except Exception as e:
-    print(f"❌ خطأ: {e}", flush=True)
+# ===== التنفيذ =====
+if __name__ == "__main__":
+    install_termux_tools()
+    if download_audio():
+        play_audio()
     input("📌 اضغط Enter للخروج ...")
