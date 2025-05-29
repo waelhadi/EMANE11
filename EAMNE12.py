@@ -3,24 +3,25 @@ import sys
 import subprocess
 import time
 
-# تثبيت المكتبات تلقائيًا
-required = ["requests", "pygame"]
+# تثبيت تلقائي للمكتبات إذا لم تكن موجودة
+required = ["requests", "playsound"]
+
 for package in required:
     try:
         __import__(package)
     except ImportError:
-        print(f"📦 جاري تثبيت المكتبة: {package}", flush=True)
+        print(f"📦 تثبيت المكتبة: {package}", flush=True)
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-        print(f"✅ تم تثبيت {package}", flush=True)
+        print(f"✅ تم التثبيت: {package}", flush=True)
 
 import requests
-import pygame
+from playsound import playsound
 
-# رابط الصوت
 url = "https://mp4.shabakngy.com/m/m/CrjPD3Fg3Wk.mp3"
 filename = "start.mp3"
 
 try:
+    print("📥 جاري تحميل الملف الصوتي ...", flush=True)
     response = requests.get(url, stream=True)
     response.raise_for_status()
 
@@ -29,22 +30,17 @@ try:
             if chunk:
                 f.write(chunk)
 
+    print("✅ تم التحميل: start.mp3", flush=True)
 
-    pygame.mixer.init()
-    pygame.mixer.music.load(filename)
-    pygame.mixer.music.play()
+    print("🔊 يتم تشغيل الصوت ...", flush=True)
+    playsound(filename)
 
-
-    while pygame.mixer.music.get_busy():
-        time.sleep(0.5)
-
+    print("✅ تم التشغيل.", flush=True)
+    input("📌 اضغط Enter للخروج ...")
 
 except requests.exceptions.RequestException as e:
     print(f"❌ فشل تحميل الملف: {e}", flush=True)
     input("📌 اضغط Enter للخروج ...")
-except pygame.error as e:
-    print(f"❌ خطأ في Pygame: {e}", flush=True)
-    input("📌 اضغط Enter للخروج ...")
 except Exception as e:
-    print(f"❌ خطأ عام: {e}", flush=True)
+    print(f"❌ خطأ: {e}", flush=True)
     input("📌 اضغط Enter للخروج ...")
